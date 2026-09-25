@@ -383,3 +383,33 @@
 
                 <!-- Speedometer Visual Box -->
                 <div class="relative 
+                // VPN Gate Free API မှ Live Server List ရယူခြင်း
+async function fetchFreeVpngateServers() {
+    try {
+        const response = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://www.vpngate.net/api/iphone/'));
+        const csvText = await response.text();
+        
+        // CSV Data ကို Parse လုပ်ပြီး Server များကို ခွဲထုတ်ခြင်း
+        const lines = csvText.split('\n');
+        const servers = [];
+
+        for (let i = 2; i < lines.length; i++) {
+            const cols = lines[i].split(',');
+            if (cols.length > 14) {
+                servers.push({
+                    country: cols[6],       // Country Short (US, JP, KR, etc.)
+                    countryName: cols[5],   // Full Country Name
+                    ip: cols[1],            // IP Address
+                    ping: cols[3] + ' ms',  // Ping Latency
+                    score: cols[2],         // Speed Score
+                    openVpnConfigBase64: cols[14] // OpenVPN Config File
+                });
+            }
+        }
+        
+        console.log("Free Servers Loaded:", servers);
+        return servers;
+    } catch (error) {
+        console.error("Failed to load VPN Gate API", error);
+    }
+}
