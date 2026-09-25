@@ -1,0 +1,385 @@
+```html
+<!DOCTYPE html>
+<html lang="my" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AuraVPN PWA Mobile App</title>
+    
+    <!-- PWA Primary Color & iOS Meta Tags -->
+    <meta name="theme-color" content="#030508">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AuraVPN">
+    <link rel="apple-touch-icon" href="https://placehold.co/192x192/10b981/ffffff?text=AuraVPN">
+
+    <!-- Embedded PWA Web Manifest using Data URI -->
+    <link rel="manifest" href='data:application/manifest+json,{"name":"AuraVPN Mobile","short_name":"AuraVPN","description":"Free Encrypted VPN App","start_url":".","display":"standalone","orientation":"portrait","background_color":"#030508","theme_color":"#030508","icons":[{"src":"https://placehold.co/192x192/10b981/ffffff?text=AuraVPN","sizes":"192x192","type":"image/png"},{"src":"https://placehold.co/512x512/10b981/ffffff?text=AuraVPN","sizes":"512x512","type":"image/png"}]}'>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Inter & Noto Sans Myanmar -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Myanmar:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#07090e',
+                            card: '#111622',
+                            cardLight: '#182030',
+                            accent: '#00f2fe',
+                            emerald: '#10b981',
+                            purple: '#8b5cf6',
+                            rose: '#f43f5e',
+                            amber: '#f59e0b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans Myanmar', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 12s linear infinite',
+                        'ping-once': 'ping 1s cubic-bezier(0, 0, 0.2, 1) 1',
+                        'bounce-subtle': 'bounceSubtle 2s infinite',
+                    },
+                    keyframes: {
+                        bounceSubtle: {
+                            '0%, 100%': { transform: 'translateY(-3%)' },
+                            '50%': { transform: 'translateY(0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans Myanmar', sans-serif;
+            background-color: #030508;
+            color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Mobile Container Glassmorphism */
+        .mobile-shell {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 880px;
+            background: linear-gradient(165deg, #0b0f19 0%, #06080d 100%);
+            border-radius: 0px;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        @media (min-width: 640px) {
+            .mobile-shell {
+                height: 850px;
+                border-radius: 42px;
+                border: 8px solid #1e293b;
+            }
+        }
+
+        /* Mobile Glass Card */
+        .glass-card {
+            background: rgba(17, 22, 34, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .glass-card-interactive {
+            background: rgba(24, 32, 48, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .glass-card-interactive:active {
+            transform: scale(0.98);
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        /* Connecting Glow Effects */
+        .power-connected {
+            box-shadow: 0 0 45px rgba(16, 185, 129, 0.4), inset 0 0 20px rgba(16, 185, 129, 0.3);
+            border-color: #10b981;
+        }
+
+        .power-connecting {
+            box-shadow: 0 0 45px rgba(245, 158, 11, 0.4), inset 0 0 20px rgba(245, 158, 11, 0.3);
+            border-color: #f59e0b;
+        }
+
+        .power-disconnected {
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.05), inset 0 0 10px rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Pulsing Radar Ring Animation */
+        .radar-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1.5px solid rgba(16, 185, 129, 0.35);
+            animation: radarPulse 3s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+        }
+
+        .radar-ring:nth-child(2) { animation-delay: 1s; }
+        .radar-ring:nth-child(3) { animation-delay: 2s; }
+
+        @keyframes radarPulse {
+            0% { width: 130px; height: 130px; opacity: 0.9; }
+            100% { width: 310px; height: 310px; opacity: 0; }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-shell flex flex-col justify-between relative select-none">
+
+        <!-- Mobile Top Status Bar Simulation -->
+        <div class="w-full px-6 pt-3 pb-1 flex justify-between items-center text-slate-400 text-xs font-mono z-30 shrink-0">
+            <span id="mobileClock">09:41</span>
+            <div class="w-20 h-4 bg-slate-900 rounded-full mx-auto hidden sm:block border border-slate-800"></div>
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-signal text-[10px]"></i>
+                <i class="fa-solid fa-wifi text-[10px]"></i>
+                <i class="fa-solid fa-battery-three-quarters text-xs text-emerald-400"></i>
+            </div>
+        </div>
+
+        <!-- PWA Installation Banner (Shows when app is installable) -->
+        <div id="pwaInstallBanner" class="hidden px-4 py-2 bg-gradient-to-r from-emerald-900/90 to-cyan-900/90 border-b border-emerald-500/30 flex items-center justify-between z-40 transition-all duration-300">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-slate-950 font-bold text-sm shadow">
+                    <i class="fa-solid fa-download"></i>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-white">App အဖြစ် ဖုန်းထဲထည့်မည်</h4>
+                    <p class="text-[9px] text-emerald-200">Home Screen တွင် မမိနစ်အတွင်း ထည့်သွင်းရန်</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-1.5">
+                <button onclick="triggerPwaInstall()" class="px-3 py-1 bg-emerald-400 text-slate-950 font-bold text-[11px] rounded-lg shadow active:scale-95 transition-transform">
+                    Install
+                </button>
+                <button onclick="dismissPwaBanner()" class="p-1 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Top Header Navigation Bar -->
+        <header class="w-full px-5 py-2.5 flex items-center justify-between z-30 shrink-0">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-400 flex items-center justify-center text-slate-950 font-black text-lg shadow-lg shadow-emerald-500/25">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base tracking-wide text-white flex items-center gap-1.5">
+                        Aura<span class="text-emerald-400">VPN</span>
+                        <span class="text-[9px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.2 rounded border border-emerald-500/30">PWA</span>
+                    </h1>
+                    <p class="text-[11px] text-slate-400">No Login Required</p>
+                </div>
+            </div>
+
+            <!-- Protocol Badge Button -->
+            <button onclick="toggleProtocolSelector()" class="glass-card-interactive px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 text-slate-300 hover:text-white border border-slate-700/60">
+                <i class="fa-solid fa-bolt text-emerald-400 text-[11px]"></i>
+                <span id="currentProtocolLabel" class="font-mono font-semibold">WireGuard</span>
+                <i class="fa-solid fa-chevron-down text-[9px] text-slate-400"></i>
+            </button>
+        </header>
+
+        <div class="flex-1 relative overflow-hidden flex flex-col">
+            
+            <!-- TAB 1: HOME VIEW (Default Screen) -->
+            <div id="tabHome" class="tab-content active w-full h-full flex flex-col justify-between px-5 py-2 overflow-y-auto">
+                
+                <!-- Connection Status Badge -->
+                <div class="flex justify-center my-1">
+                    <div id="statusBadge" class="px-4 py-1.5 rounded-full glass-card text-xs font-medium tracking-wide flex items-center gap-2 border border-slate-800 transition-all duration-300">
+                        <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                        <span id="statusText" class="text-slate-300 font-semibold">မချိတ်ဆက်ရသေးပါ (Disconnected)</span>
+                    </div>
+                </div>
+
+                <!-- Big Interactive Power Connect Button Canvas -->
+                <div class="relative w-full aspect-square max-w-[250px] mx-auto my-auto flex items-center justify-center">
+                    
+                    <!-- Radar Ripple Rings (Visible when Connected) -->
+                    <div id="radarContainer" class="absolute inset-0 flex items-center justify-center pointer-events-none hidden">
+                        <div class="radar-ring"></div>
+                        <div class="radar-ring"></div>
+                        <div class="radar-ring"></div>
+                    </div>
+
+                    <!-- Dashed Outer Orbital Ring -->
+                    <div id="orbitalRing" class="absolute inset-2 rounded-full border-2 border-dashed border-slate-800 transition-all duration-700"></div>
+
+                    <!-- Central Power Button -->
+                    <button id="mainConnectBtn" onclick="toggleVPNConnection()" class="group relative w-40 h-40 sm:w-44 sm:h-44 rounded-full bg-slate-900/90 border-4 flex flex-col items-center justify-center transition-all duration-500 power-disconnected cursor-pointer focus:outline-none overflow-hidden z-10 active:scale-95">
+                        
+                        <div class="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+
+                        <div id="powerIconWrapper" class="relative z-10 transition-transform duration-300 group-hover:scale-110">
+                            <i id="powerIcon" class="fa-solid fa-power-off text-4xl text-slate-500"></i>
+                        </div>
+
+                        <span id="powerBtnText" class="relative z-10 mt-2 text-xs font-bold tracking-wider text-slate-300">
+                            CONNECT
+                        </span>
+
+                        <span id="autoSelectText" class="relative z-10 text-[9px] text-emerald-400/90 font-medium mt-0.5">
+                            ⚡ Auto Fast Route
+                        </span>
+                    </button>
+                </div>
+
+                <!-- Server Selection Quick Banner -->
+                <div class="w-full mb-3">
+                    <button onclick="openServerDrawer()" class="w-full glass-card-interactive p-3.5 rounded-2xl flex items-center justify-between border border-slate-800 text-left">
+                        <div class="flex items-center space-x-3">
+                            <div id="activeServerFlag" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xl shadow-inner">
+                                ⚡
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">SELECTED SERVER</span>
+                                    <span class="text-[8px] bg-emerald-500/20 text-emerald-400 px-1 py-0.2 rounded font-mono font-bold">FREE</span>
+                                </div>
+                                <h2 id="activeServerTitle" class="font-bold text-white text-xs sm:text-sm truncate">
+                                    အမြန်ဆုံး Server (Auto Connect)
+                                </h2>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <div class="text-right">
+                                <p id="activeServerLatency" class="text-xs font-mono text-emerald-400 font-bold">12 ms</p>
+                                <p class="text-[9px] text-slate-400">Best Ping</p>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-xs text-slate-500"></i>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2.5 mb-2">
+                    <!-- Download Card -->
+                    <div class="glass-card p-3 rounded-2xl border border-slate-800/80">
+                        <div class="flex justify-between items-center text-slate-400 text-[11px] mb-1">
+                            <span>ဒေါင်းလုဒ် (Download)</span>
+                            <i class="fa-solid fa-arrow-down text-emerald-400"></i>
+                        </div>
+                        <div id="downloadVal" class="text-base font-bold font-mono text-white">0.0 <span class="text-xs font-normal text-slate-400">Mbps</span></div>
+                    </div>
+
+                    <!-- Upload Card -->
+                    <div class="glass-card p-3 rounded-2xl border border-slate-800/80">
+                        <div class="flex justify-between items-center text-slate-400 text-[11px] mb-1">
+                            <span>အပ်လုဒ် (Upload)</span>
+                            <i class="fa-solid fa-arrow-up text-cyan-400"></i>
+                        </div>
+                        <div id="uploadVal" class="text-base font-bold font-mono text-white">0.0 <span class="text-xs font-normal text-slate-400">Mbps</span></div>
+                    </div>
+
+                    <!-- Virtual IP Card -->
+                    <div class="glass-card p-3 rounded-2xl border border-slate-800/80">
+                        <div class="flex justify-between items-center text-slate-400 text-[11px] mb-1">
+                            <span>Virtual IP</span>
+                            <i class="fa-solid fa-network-wired text-purple-400"></i>
+                        </div>
+                        <div id="virtualIpVal" class="text-xs font-bold font-mono text-slate-300 truncate">Hidden</div>
+                    </div>
+
+                    <!-- Timer Card -->
+                    <div class="glass-card p-3 rounded-2xl border border-slate-800/80">
+                        <div class="flex justify-between items-center text-slate-400 text-[11px] mb-1">
+                            <span>ကြာချိန် (Duration)</span>
+                            <i class="fa-solid fa-stopwatch text-amber-400"></i>
+                        </div>
+                        <div id="durationVal" class="text-base font-bold font-mono text-white">00:00:00</div>
+                    </div>
+                </div>
+
+                <!-- Mini Real-time Bandwidth Sparkline Canvas -->
+                <div class="glass-card p-2.5 rounded-2xl border border-slate-800/80 mb-2">
+                    <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1">
+                        <span>LIVE TRAFFIC GRAPH</span>
+                        <span class="text-emerald-400 font-mono">Real-time Node</span>
+                    </div>
+                    <canvas id="trafficChart" class="w-full h-10 rounded-lg"></canvas>
+                </div>
+
+            </div>
+
+            <!-- TAB 2: SERVERS LIST VIEW -->
+            <div id="tabServers" class="tab-content hidden w-full h-full flex flex-col p-5 overflow-hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-globe text-cyan-400"></i> Free Locations
+                        </h2>
+                        <p class="text-xs text-slate-400">ကန့်သတ်ချက်မရှိ အခမဲ့ Server များ</p>
+                    </div>
+                    <span class="text-xs bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-500/30 font-semibold">6 Countries</span>
+                </div>
+
+                <!-- Server Search Box -->
+                <div class="relative mb-3">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                    <input type="text" id="mobileServerSearch" onkeyup="filterMobileServers()" placeholder="Server ရှာဖွေရန်..." class="w-full bg-slate-900/90 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-all">
+                </div>
+
+                <!-- Server Scrollable List -->
+                <div id="mobileServerContainer" class="flex-1 overflow-y-auto space-y-2 pr-1">
+                    <!-- Items generated dynamically in JS -->
+                </div>
+            </div>
+
+            <!-- TAB 3: SPEED TEST VIEW -->
+            <div id="tabSpeed" class="tab-content hidden w-full h-full flex flex-col p-5 items-center justify-between overflow-y-auto text-center">
+                <div class="w-full text-left">
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-gauge-high text-emerald-400"></i> Speedometer Test
+                    </h2>
+                    <p class="text-xs text-slate-400">ယခု VPN ချိတ်ဆက်ထားသော အမြန်နှုန်းကို စမ်းသပ်ပါ</p>
+                </div>
+
+                <!-- Speedometer Visual Box -->
+                <div class="relative 
